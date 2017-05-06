@@ -3,8 +3,8 @@
 #include "picopng.h"
 
 #include <stdio.h>
-
-
+#include <cmath>
+#include <algorithm>
 
 
 
@@ -103,6 +103,9 @@ unsigned char* theimage;
 
 unsigned char tilexsize = 8;
 unsigned char tileysize = 8;
+
+unsigned int xtiles;
+unsigned int ytiles;
 unsigned int numoftiles;
 
 class tile
@@ -110,6 +113,11 @@ class tile
     public:
     unsigned int* tilestart;
     tile* iamaninstanceof;
+
+    unsigned int tilenum;
+    unsigned int tileyval;
+    unsigned int tilexval;
+
     std::vector<tile*> instancesofme;
 
     tile() :iamaninstanceof(0){}
@@ -135,13 +143,14 @@ bool comparetiles(unsigned int* tile1start, unsigned int* tile2start)
 }
 
 
-unsigned int* gettilestart(unsigned int tilenum)
+bool sorttilesbyuse (tile* i, tile* j)
 {
-    assert(tilenum < numoftiles);
-    unsigned int tileyval = tilenum / (widthheight[0] / tilexsize);
-    unsigned int tilexval = tilenum - (tileyval* (widthheight[0] / tilexsize));
+    return (i->instancesofme.size() <  j->instancesofme.size());
+}
 
-    return &(allchannels[(tileyval*widthheight[0]*tileysize)+tilexval*tilexsize]);
+void readtileinfo (tile* i)
+{
+    printf ("# %d Used %d times. ", i->tilenum, i->instancesofme.size());
 }
 
 
@@ -161,12 +170,18 @@ int main(int argc, char **argv)
                 printf ("Some pixels left over with image size: %d * %d, exiting. \n", (int)widthheight[0], (int)widthheight[1]);
                 return 0;
             }
-            numoftiles = (widthheight[0] / tilexsize) * (widthheight[1] / tileysize);
+            xtiles = widthheight[0] / tilexsize;
+            ytiles = widthheight[1] / tileysize;
+            numoftiles = xtiles * ytiles;
+            printf ("Xtiles: %d  Ytiles: %d Totaltiles: %d  \n", xtiles, ytiles, numoftiles);
+
             tile* alltiles = new tile[numoftiles];
             for(unsigned int i = 0;i<numoftiles;i++)
             {
-                alltiles[i].tilestart = gettilestart(i);
-                //could set tilenumber here rather than pointer arithmetic.. lazy.
+                alltiles[i].tilenum = i;
+                alltiles[i].tileyval = i / (widthheight[0] / tilexsize);
+                alltiles[i].tilexval = i - (alltiles[i].tileyval* (widthheight[0] / tilexsize));
+                alltiles[i].tilestart = &(allchannels[(alltiles[i].tileyval*widthheight[0]*tileysize)+alltiles[i].tilexval*tilexsize]);
             }
 
 
@@ -190,7 +205,27 @@ int main(int argc, char **argv)
                 }
             }
             printf ("Unique tiles found: %d \n", uniquetiles.size());
+            printf ("Xtiles: %d  Ytiles: %d Totaltiles: %d  \n", xtiles, ytiles, numoftiles);
 
+            unsigned int testy = sqrt(uniquetiles.size())+1;
+
+            printf ("Could fit in a png %d * %d", testy*tilexsize, testy*tileysize);
+
+
+
+
+            std::sort (uniquetiles.begin(), uniquetiles.end(), sorttilesbyuse);
+            for_each (uniquetiles.begin(), uniquetiles.end(), readtileinfo);
+
+
+
+            //check for ones that are ONLY used with certain relation to other ones, within regionsize tiles away
+            //put unique ones on a new image - make a var in tile for newimageposition
+            //export to map / png
+
+            //check for rotate/flipped copies?
+            //check for different palette version?
+            //check for similarity?
 
 
             delete[] theimage;
