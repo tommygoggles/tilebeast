@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "picopng.h"
 
+#include <stdio.h>
 
 
 
@@ -108,9 +109,14 @@ class tile
 {
     public:
     unsigned int* tilestart;
+    tile* iamaninstanceof;
+    std::vector<tile*> instancesofme;
 
+    tile() :iamaninstanceof(0){}
 };
 
+
+std::vector<tile*> uniquetiles;
 
 
 bool comparetiles(unsigned int* tile1start, unsigned int* tile2start)
@@ -150,24 +156,42 @@ int main(int argc, char **argv)
         if(loadpng(argv[1],widthheight,&theimage))
         {
             allchannels = (unsigned int*)theimage;
-            assert(widthheight[0] % tilexsize == 0);
-            assert(widthheight[1] % tileysize == 0);
+            if(widthheight[0] % tilexsize != 0 || widthheight[1] % tileysize != 0)
+            {
+                printf ("Some pixels left over with image size: %d * %d, exiting. \n", (int)widthheight[0], (int)widthheight[1]);
+                return 0;
+            }
             numoftiles = (widthheight[0] / tilexsize) * (widthheight[1] / tileysize);
             tile* alltiles = new tile[numoftiles];
             for(unsigned int i = 0;i<numoftiles;i++)
             {
                 alltiles[i].tilestart = gettilestart(i);
+                //could set tilenumber here rather than pointer arithmetic.. lazy.
             }
 
 
-            unsigned int counttest = 0;
-            for(unsigned int i = 0;i<numoftiles;i++)
+            for(unsigned int currenttile = 0;currenttile<numoftiles;currenttile++)
             {
-                if(comparetiles(alltiles[11].tilestart,alltiles[i].tilestart))
+                if(alltiles[currenttile].iamaninstanceof == 0)
                 {
-                    counttest++;
+                    printf ("Doing tile: %d \n", currenttile);
+                    uniquetiles.push_back(&(alltiles[currenttile]));
+                    for(unsigned int i = currenttile+1;i<numoftiles;i++)
+                    {
+                        if(alltiles[i].iamaninstanceof == 0)
+                        {
+                            if(comparetiles(alltiles[currenttile].tilestart,alltiles[i].tilestart))
+                            {
+                                alltiles[i].iamaninstanceof = &(alltiles[currenttile]);
+                                alltiles[currenttile].instancesofme.push_back(&(alltiles[i]));
+                            }
+                        }
+                    }
                 }
             }
+            printf ("Unique tiles found: %d \n", uniquetiles.size());
+
+
 
             delete[] theimage;
         }
