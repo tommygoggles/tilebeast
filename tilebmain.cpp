@@ -191,6 +191,7 @@ int main(int argc, char **argv)
                 {
                     printf ("Doing tile: %d \n", currenttile);
                     uniquetiles.push_back(&(alltiles[currenttile]));
+                    alltiles[currenttile].instancesofme.push_back(&(alltiles[currenttile]));
                     for(unsigned int i = currenttile+1;i<numoftiles;i++)
                     {
                         if(alltiles[i].iamaninstanceof == 0)
