@@ -108,6 +108,10 @@ unsigned int xtiles;
 unsigned int ytiles;
 unsigned int numoftiles;
 
+
+
+
+
 class tile
 {
     public:
@@ -123,6 +127,19 @@ class tile
     tile() :iamaninstanceof(0){}
 };
 
+tile* alltiles;
+
+tile* gettile(int x, int y)
+{
+    if(x >= 0 && x < (int)xtiles && y >= 0 && y < (int)ytiles)
+    {
+        return &(alltiles[(y*xtiles)+x]);
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 std::vector<tile*> uniquetiles;
 
@@ -150,7 +167,7 @@ bool sorttilesbyuse (tile* i, tile* j)
 
 void readtileinfo (tile* i)
 {
-    printf ("# %d Used %d times. ", i->tilenum, i->instancesofme.size());
+    printf ("# %d Used %d times. \n", i->tilenum+1, i->instancesofme.size());
 }
 
 
@@ -175,7 +192,7 @@ int main(int argc, char **argv)
             numoftiles = xtiles * ytiles;
             printf ("Xtiles: %d  Ytiles: %d Totaltiles: %d  \n", xtiles, ytiles, numoftiles);
 
-            tile* alltiles = new tile[numoftiles];
+            alltiles = new tile[numoftiles];
             for(unsigned int i = 0;i<numoftiles;i++)
             {
                 alltiles[i].tilenum = i;
@@ -191,6 +208,7 @@ int main(int argc, char **argv)
                 {
                     printf ("Doing tile: %d \n", currenttile);
                     uniquetiles.push_back(&(alltiles[currenttile]));
+                    alltiles[currenttile].iamaninstanceof = &(alltiles[currenttile]);
                     alltiles[currenttile].instancesofme.push_back(&(alltiles[currenttile]));
                     for(unsigned int i = currenttile+1;i<numoftiles;i++)
                     {
@@ -212,11 +230,52 @@ int main(int argc, char **argv)
 
             printf ("Could fit in a png %d * %d", testy*tilexsize, testy*tileysize);
 
+            unsigned int radius = 20;
+
+            for(unsigned int i = 0;i<uniquetiles.size();i++)
+            {
+                for(int x = -(int)radius;x<= (int)radius;x++)
+                {
+                    for(int y = -(int)radius;y<=(int)radius;y++)
+                    {
+                        if(x && y)//we don't wanna check the middle..
+                        {
+                            unsigned int matches = 0;
+                            unsigned int all = uniquetiles[i]->instancesofme.size();
+                            for(unsigned int j = 1;j<all;j++)
+                            {
+                                tile* tile1 = gettile(uniquetiles[i]->tilexval+x, uniquetiles[i]->tileyval+y);
+                                tile* tile2 = gettile(uniquetiles[i]->instancesofme[j]->tilexval+x, uniquetiles[i]->instancesofme[j]->tileyval+y);
+                                if(tile1 && tile2)
+                                {
+                                    if(tile1->iamaninstanceof == tile2->iamaninstanceof)
+                                    {
+                                        matches++;
+                                    }
+                                }
+                                else
+                                {
+                                    if(!tile1 && !tile2)
+                                    {
+                                        //matches++;//no, don't actually care if they both have nothing offscreen
+                                    }
+                                }
+                            }
+                            //printf ("tile %d position x:%d y:%d matches %d / %d \n", uniquetiles[i]->tilenum, x, y, matches,all);
+                            if(all > 1 && matches == all-1)
+                            {
+                                printf ("tile %d position x:%d y:%d matches %d / %d \n", uniquetiles[i]->tilenum, x, y, matches,all-1);
+                                //printf ("matches for: %d \n", uniquetiles[i]->tilenum);
+                            }
+                        }
+
+                    }
+                }
+            }
 
 
-
-            std::sort (uniquetiles.begin(), uniquetiles.end(), sorttilesbyuse);
-            for_each (uniquetiles.begin(), uniquetiles.end(), readtileinfo);
+            //std::sort (uniquetiles.begin(), uniquetiles.end(), sorttilesbyuse);
+            //for_each (uniquetiles.begin(), uniquetiles.end(), readtileinfo);
 
 
 
