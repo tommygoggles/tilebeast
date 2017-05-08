@@ -1,0 +1,15 @@
+language: cpp
+
+os:
+  - linux
+  - osx
+
+
+compiler:
+  - clang
+  - gcc
+
+#before_install:
+
+
+script: pwd && ls && cmake . && make && ls && cat Makefile && cd bin && pwd && ls
