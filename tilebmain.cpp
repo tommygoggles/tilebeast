@@ -110,6 +110,36 @@ unsigned int numoftiles;
 
 
 
+class tile;
+
+class neighbour
+{
+    public:
+    tile* thetile;
+    unsigned int howmany;
+
+    neighbour(tile* til = 0, unsigned int howm = 0): thetile(til), howmany(howm){};
+};
+
+
+
+
+
+
+class neighbours
+{
+    public:
+    std::vector<neighbour> alltheneighbours;
+
+    void addneighbour(tile* tiletoadd);
+
+    void readneighbours();
+
+};
+
+
+
+
 
 
 class tile
@@ -124,8 +154,48 @@ class tile
 
     std::vector<tile*> instancesofme;
 
+    neighbours xneighbours[2];
+    neighbours yneighbours[2];
+
     tile() :iamaninstanceof(0){}
 };
+
+
+
+
+void neighbours::addneighbour(tile* tiletoadd)
+{
+    if(tiletoadd)
+    {
+        tiletoadd = tiletoadd->iamaninstanceof;
+    }
+
+    for(unsigned int i = 0;i<alltheneighbours.size();i++)
+    {
+        if(alltheneighbours[i].thetile == tiletoadd)
+        {
+            alltheneighbours[i].howmany++;
+            return;
+        }
+    }
+    alltheneighbours.push_back(neighbour(tiletoadd,1));
+}
+
+
+
+
+void neighbours::readneighbours()
+{
+    for(unsigned int i = 0;i<alltheneighbours.size();i++)
+    {
+
+        printf ("neighbour %d, tile: %d, numberof %d \n", i, alltheneighbours[i].thetile, alltheneighbours[i].howmany);
+
+    }
+}
+
+
+
 
 tile* alltiles;
 
@@ -230,7 +300,11 @@ int main(int argc, char **argv)
 
             printf ("Could fit in a png %d * %d", testy*tilexsize, testy*tileysize);
 
-            unsigned int radius = 20;
+
+
+
+
+            /*unsigned int radius = 20;
 
             for(unsigned int i = 0;i<uniquetiles.size();i++)
             {
@@ -271,7 +345,36 @@ int main(int argc, char **argv)
 
                     }
                 }
+            }*/
+
+
+            for(unsigned int currenttile = 0;currenttile<numoftiles;currenttile++)
+            {
+                tile* above = gettile(alltiles[currenttile].tilexval, alltiles[currenttile].tileyval-1);
+                tile* below = gettile(alltiles[currenttile].tilexval, alltiles[currenttile].tileyval+1);
+                tile* left = gettile(alltiles[currenttile].tilexval-1, alltiles[currenttile].tileyval);
+                tile* right = gettile(alltiles[currenttile].tilexval+1, alltiles[currenttile].tileyval);
+
+                alltiles[currenttile].iamaninstanceof->yneighbours[0].addneighbour(above);
+                alltiles[currenttile].iamaninstanceof->yneighbours[1].addneighbour(below);
+                alltiles[currenttile].iamaninstanceof->xneighbours[0].addneighbour(left);
+                alltiles[currenttile].iamaninstanceof->xneighbours[1].addneighbour(right);
             }
+
+
+
+
+            for(unsigned int i = 0;i<uniquetiles.size();i++)
+            {
+                printf ("tile %d \n", i);
+                uniquetiles[i]->yneighbours[0].readneighbours();
+                uniquetiles[i]->yneighbours[1].readneighbours();
+                uniquetiles[i]->xneighbours[0].readneighbours();
+                uniquetiles[i]->xneighbours[1].readneighbours();
+
+            }
+
+
 
 
             //std::sort (uniquetiles.begin(), uniquetiles.end(), sorttilesbyuse);
