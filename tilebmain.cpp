@@ -116,9 +116,9 @@ class neighbour
 {
     public:
     tile* thetile;
-    unsigned int howmany;
+    unsigned int howmanyof;
 
-    neighbour(tile* til = 0, unsigned int howm = 0): thetile(til), howmany(howm){};
+    neighbour(tile* til = 0, unsigned int howm = 0): thetile(til), howmanyof(howm){};
 };
 
 
@@ -174,7 +174,7 @@ void neighbours::addneighbour(tile* tiletoadd)
     {
         if(alltheneighbours[i].thetile == tiletoadd)
         {
-            alltheneighbours[i].howmany++;
+            alltheneighbours[i].howmanyof++;
             return;
         }
     }
@@ -189,7 +189,7 @@ void neighbours::readneighbours()
     for(unsigned int i = 0;i<alltheneighbours.size();i++)
     {
 
-        printf ("neighbour %d, tile: %d, numberof %d \n", i, alltheneighbours[i].thetile, alltheneighbours[i].howmany);
+        printf ("neighbour %d, tile: %d, numberof %d \n", i, alltheneighbours[i].thetile, alltheneighbours[i].howmanyof);
 
     }
 }
