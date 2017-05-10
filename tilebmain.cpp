@@ -188,9 +188,7 @@ void neighbours::readneighbours()
 {
     for(unsigned int i = 0;i<alltheneighbours.size();i++)
     {
-
         printf ("neighbour %d, tile: %d, numberof %d \n", i, alltheneighbours[i].thetile, alltheneighbours[i].howmanyof);
-
     }
 }
 
@@ -230,6 +228,34 @@ bool comparetiles(unsigned int* tile1start, unsigned int* tile2start)
 }
 
 
+
+unsigned int comparetilesdif(unsigned int* tile1start, unsigned int* tile2start)
+{
+    unsigned int diffs = 0;
+    for(unsigned int pixy = 0;pixy<tileysize;pixy++)
+    {
+        for(unsigned int pixx = 0;pixx<tilexsize;pixx++)
+        {
+            if(tile1start[(pixy*widthheight[0])+pixx] !=  tile2start[(pixy*widthheight[0])+pixx])
+            {
+                diffs++;
+            }
+        }
+    }
+    return diffs;
+}
+
+unsigned int comparetilesdif(tile* tile1, tile* tile2)
+{
+    return comparetilesdif(tile1->tilestart,tile2->tilestart);
+}
+
+
+
+
+
+
+
 bool sorttilesbyuse (tile* i, tile* j)
 {
     return (i->instancesofme.size() <  j->instancesofme.size());
@@ -238,6 +264,32 @@ bool sorttilesbyuse (tile* i, tile* j)
 void readtileinfo (tile* i)
 {
     printf ("# %d Used %d times. \n", i->tilenum+1, i->instancesofme.size());
+}
+
+
+void findexactcopies()
+{
+    for(unsigned int currenttile = 0;currenttile<numoftiles;currenttile++)
+    {
+        if(alltiles[currenttile].iamaninstanceof == 0)
+        {
+            printf ("Doing tile: %d \n", currenttile);
+            uniquetiles.push_back(&(alltiles[currenttile]));
+            alltiles[currenttile].iamaninstanceof = &(alltiles[currenttile]);
+            alltiles[currenttile].instancesofme.push_back(&(alltiles[currenttile]));
+            for(unsigned int i = currenttile+1;i<numoftiles;i++)
+            {
+                if(alltiles[i].iamaninstanceof == 0)
+                {
+                    if(comparetiles(alltiles[currenttile].tilestart,alltiles[i].tilestart))
+                    {
+                        alltiles[i].iamaninstanceof = &(alltiles[currenttile]);
+                        alltiles[currenttile].instancesofme.push_back(&(alltiles[i]));
+                    }
+                }
+            }
+        }
+    }
 }
 
 
@@ -272,27 +324,10 @@ int main(int argc, char **argv)
             }
 
 
-            for(unsigned int currenttile = 0;currenttile<numoftiles;currenttile++)
-            {
-                if(alltiles[currenttile].iamaninstanceof == 0)
-                {
-                    printf ("Doing tile: %d \n", currenttile);
-                    uniquetiles.push_back(&(alltiles[currenttile]));
-                    alltiles[currenttile].iamaninstanceof = &(alltiles[currenttile]);
-                    alltiles[currenttile].instancesofme.push_back(&(alltiles[currenttile]));
-                    for(unsigned int i = currenttile+1;i<numoftiles;i++)
-                    {
-                        if(alltiles[i].iamaninstanceof == 0)
-                        {
-                            if(comparetiles(alltiles[currenttile].tilestart,alltiles[i].tilestart))
-                            {
-                                alltiles[i].iamaninstanceof = &(alltiles[currenttile]);
-                                alltiles[currenttile].instancesofme.push_back(&(alltiles[i]));
-                            }
-                        }
-                    }
-                }
-            }
+            findexactcopies();
+
+
+
             printf ("Unique tiles found: %d \n", uniquetiles.size());
             printf ("Xtiles: %d  Ytiles: %d Totaltiles: %d  \n", xtiles, ytiles, numoftiles);
 
@@ -348,6 +383,20 @@ int main(int argc, char **argv)
             }*/
 
 
+            for(unsigned int i = 0;i<uniquetiles.size();i++)
+            {
+                for(unsigned int j = i+1;j<uniquetiles.size();j++)
+                {
+                    if(comparetilesdif(uniquetiles[i],uniquetiles[j]) < 2)
+                    {
+                        printf ("%d is nearly the same as %d (1 pixel different...)\n", uniquetiles[i]-alltiles,uniquetiles[j]-alltiles);
+                        //copy the pixels over - then reassess it all..
+                    }
+                }
+            }
+
+
+
             for(unsigned int currenttile = 0;currenttile<numoftiles;currenttile++)
             {
                 tile* above = gettile(alltiles[currenttile].tilexval, alltiles[currenttile].tileyval-1);
@@ -366,12 +415,12 @@ int main(int argc, char **argv)
 
             for(unsigned int i = 0;i<uniquetiles.size();i++)
             {
-                printf ("tile %d \n", i);
+                /*printf ("tile %d \n", i);
                 uniquetiles[i]->yneighbours[0].readneighbours();
                 uniquetiles[i]->yneighbours[1].readneighbours();
                 uniquetiles[i]->xneighbours[0].readneighbours();
                 uniquetiles[i]->xneighbours[1].readneighbours();
-
+*/
             }
 
 
